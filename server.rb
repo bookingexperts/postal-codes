@@ -53,22 +53,22 @@ end
 get '/search/:code' do |code|
   content_type :json
 
-  if code and code.size >= 4
-    postcodes=Postcode.search(code).pluck(:id)
-    streets=Street.where(:postcode_id => postcodes)
+  halt 422, { :error => "Search string too short" }.to_json unless code.length >= 4
 
-    addresses = []    
+  scanned_code=code.scan(/([a-zA-Z]{2})([0-9]{4})/)
 
-    streets.each do |street|
-      addresses << { :street => street.street, :zip => street.postcode.fourpp, :city => street.postcode.city.cityname.name }
-    end
+  halt 422, { :error => "Wrong search string format" }.to_json if scanned_code.blank?
+  
+  postcodes=Postcode.search(scanned_code[0][1]).pluck(:id)
+  streets=Street.where(:postcode_id => postcodes).where(:chars => scanned_code[0][0])
 
-    addresses.to_json
+  addresses = []    
 
-  else
-    status 422
-    { :error => "Search string too short" }.to_json
+  streets.each do |street|
+    addresses << { :street => street.street, :zip => "#{street.postcode.fourpp} #{street.chars}", :city => street.postcode.city.cityname.name }
   end
+
+  addresses.to_json
 end
 
 get '/*' do
