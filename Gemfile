@@ -5,5 +5,5 @@ gem 'sinatra'
 gem "sinatra-reloader"
 gem 'json'
 gem 'activerecord'
-#gem 'sinatra-activerecord'
+gem 'rack-contrib'
 

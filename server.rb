@@ -8,6 +8,10 @@ require "sinatra/reloader" if development?
 require 'active_record'
 require 'logger'
 
+require 'rack/contrib/jsonp'
+ 
+use Rack::JSONP
+
 YAML::load(File.open('config/database.yml'))[settings.environment.to_s].each do |key, value|
   set "db_#{key}".to_sym, value
 end
@@ -50,17 +54,23 @@ class Cityname < ActiveRecord::Base
   belongs_to :city
 end
   
-get '/search/:code' do |code|
+before do
   content_type :json
+end
 
+get '/search/:code' do |code|
   halt 422, { :error => "Search string too short" }.to_json unless code.length >= 4
 
-  scanned_code=code.scan(/([a-zA-Z]{2})([0-9]{4})/)
+  scanned_code=code.scan(/([0-9]{4})([a-zA-Z]{2})/)
+#  scanned_code=code.scan(/([0-9]{4})([a-zA-Z]{2})?/)
 
   halt 422, { :error => "Wrong search string format" }.to_json if scanned_code.blank?
   
-  postcodes=Postcode.search(scanned_code[0][1]).pluck(:id)
-  streets=Street.where(:postcode_id => postcodes).where(:chars => scanned_code[0][0])
+  postcodes=Postcode.search(scanned_code[0][0]).pluck(:id)
+  streets=Street.where(:postcode_id => postcodes).where(:chars => scanned_code[0][1])
+
+#  streets=Street.where(:postcode_id => postcodes)
+#  streets=streets.where(:chars => scanned_code[0][1]) if scanned_code[0][1]
 
   addresses = []    
 
@@ -72,7 +82,6 @@ get '/search/:code' do |code|
 end
 
 get '/*' do
-  content_type :json
   status 404
   { :error => "Route not found" }.to_json
 end
