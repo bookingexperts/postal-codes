@@ -1,0 +1,10 @@
+.bundle
+db/*.sqlite3
+db/*.txt
+log/*.log
+tmp/
+.sass-cache/
+config/database.yml
+*.swp
+*.DS_Store
+
