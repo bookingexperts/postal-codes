@@ -1,6 +1,6 @@
 source :rubygems
 
-gem 'mysql2'
+gem 'pg'
 gem 'sinatra'
 gem "sinatra-reloader"
 gem 'json'
